@@ -25,6 +25,8 @@ server.registerTool(
 const app = express();
 app.use(express.json());
 
+app.get("/healthz", (_req, res) => res.status(200).send("ok"));
+
 // ✅ Stateless transport: pass sessionIdGenerator: undefined (required by types)
 const transport = new StreamableHTTPServerTransport({
   sessionIdGenerator: undefined,   // <- key line

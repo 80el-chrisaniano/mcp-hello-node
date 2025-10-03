@@ -4,10 +4,13 @@
   "description": "",
   "main": "index.js",
   "type": "module",
+  "engines": { "node": ">=18" },
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "start": "node dist/server.js",
-    "build": "tsc"
+    "build": "tsc -p .", 
+    "build:prod": "tsc -p .",
+    "start:prod": "NODE_ENV=production node dist/server.js"
   },
   "keywords": [],
   "author": "",
