@@ -1,4 +1,7 @@
-### Call greet (stateless)
+### Health
+GET http://localhost:8000/healthz
+
+### Statless tool call (the only one you need)
 POST http://localhost:8000/mcp
 Content-Type: application/json
 Accept: application/json, text/event-stream
@@ -12,3 +15,11 @@ Accept: application/json, text/event-stream
     "arguments": { "name": "Chris" }
   }
 }
+
+### GET /mcp (should be 405 in stateless)
+GET http://localhost:8000/mcp
+Accept: text/event-stream
+
+### DELETE /mcp (should be 405 in stateless)
+DELETE http://localhost:8000/mcp
+Accept: application/json, text/event-stream
