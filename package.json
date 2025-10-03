@@ -1,8 +1,7 @@
 {
   "name": "mcp-hello-node",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "private": true,
   "type": "module",
   "engines": { "node": ">=18" },
   "scripts": {

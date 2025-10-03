@@ -1,60 +1,14 @@
-### 0) Health
+### Health
 GET http://localhost:8000/healthz
 
-
-### 1) Open SSE stream (creates the session)
-# Required header for SSE:
-GET http://localhost:8000/mcp
-Accept: text/event-stream
-
-# After this request runs, look at the response headers:
-# - Copy the value of the `Mcp-Session-Id` header from the response.
-#   The VS Code REST Client shows headers above the body. Save it for the next steps.
-
-
-### 2) Initialize (MUST be the first JSON-RPC request on the session)
-# Replace <SESSION_ID> with the value from step 1.
+### Statless tool call (the only one you need)
 POST http://localhost:8000/mcp
 Content-Type: application/json
 Accept: application/json, text/event-stream
-Mcp-Session-Id: <SESSION_ID>
 
 {
   "jsonrpc": "2.0",
-  "id": 1,
-  "method": "initialize",
-  "params": {
-    "protocolVersion": "2025-03-26",
-    "capabilities": {
-      "roots": { "listChanged": true },
-      "sampling": {}
-    },
-    "clientInfo": { "name": "VSCode REST Client", "version": "dev" }
-  }
-}
-
-
-### 3) Tell the server we’re ready (initialized notification)
-POST http://localhost:8000/mcp
-Content-Type: application/json
-Accept: application/json, text/event-stream
-Mcp-Session-Id: <SESSION_ID>
-
-{
-  "jsonrpc": "2.0",
-  "method": "notifications/initialized"
-}
-
-
-### 4) Call your tool (now allowed)
-POST http://localhost:8000/mcp
-Content-Type: application/json
-Accept: application/json, text/event-stream
-Mcp-Session-Id: <SESSION_ID>
-
-{
-  "jsonrpc": "2.0",
-  "id": 2,
+  "id": "1",
   "method": "tools/call",
   "params": {
     "name": "greet",
@@ -62,8 +16,10 @@ Mcp-Session-Id: <SESSION_ID>
   }
 }
 
+### GET /mcp (should be 405 in stateless)
+GET http://localhost:8000/mcp
+Accept: text/event-stream
 
-### 5) Close the session (optional)
+### DELETE /mcp (should be 405 in stateless)
 DELETE http://localhost:8000/mcp
 Accept: application/json, text/event-stream
-Mcp-Session-Id: <SESSION_ID>
