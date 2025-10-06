@@ -1,5 +1,4 @@
-// src/server.ts
-import express, { Request, Response } from "express";
+import express from "express";
 import { z } from "zod";
 import dotenv from "dotenv";
 import fetch from "node-fetch";
@@ -33,10 +32,10 @@ server.registerTool(
   {
     title: "Greet",
     description: "Return a friendly greeting",
-    inputSchema: { name: z.string().optional() },
+    inputSchema: { name: z.string().optional() }
   },
   async ({ name }) => ({
-    content: [{ type: "text", text: `Hello, ${name || "World"}!` }],
+    content: [{ type: "text", text: `Hello, ${name || "World"}!` }]
   })
 );
 
@@ -121,8 +120,8 @@ const transport = new StreamableHTTPServerTransport({
 // Connect transport once at startup
 await server.connect(transport);
 
-// POST handles JSON-RPC requests
-app.post("/mcp", async (req: Request, res: Response) => {
+// Only POST /mcp is meaningful in stateless mode
+app.post("/mcp", async (req, res) => {
   await transport.handleRequest(req, res, req.body);
 });
 
@@ -131,14 +130,14 @@ app.get("/mcp", (_req, res) =>
   res.status(405).json({
     jsonrpc: "2.0",
     error: { code: -32000, message: "Method not allowed." },
-    id: null,
+    id: null
   })
 );
 app.delete("/mcp", (_req, res) =>
   res.status(405).json({
     jsonrpc: "2.0",
     error: { code: -32000, message: "Method not allowed." },
-    id: null,
+    id: null
   })
 );
 

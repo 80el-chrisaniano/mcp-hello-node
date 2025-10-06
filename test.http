@@ -53,3 +53,11 @@ Accept: application/json, text/event-stream
     "arguments": { "name": "Chris" }
   }
 }
+
+### GET /mcp (should be 405 in stateless)
+GET http://localhost:8000/mcp
+Accept: text/event-stream
+
+### DELETE /mcp (should be 405 in stateless)
+DELETE http://localhost:8000/mcp
+Accept: application/json, text/event-stream
