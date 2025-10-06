@@ -1,21 +1,32 @@
 import express from "express";
 import { z } from "zod";
+import dotenv from "dotenv";
+import fetch from "node-fetch";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 
-const app = express();
-app.use(express.json());
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-// health endpoint (Render will like this)
-app.get("/healthz", (_req, res) => res.status(200).send("ok"));
+// Load .env that ships alongside the source file
+dotenv.config({ path: path.join(__dirname, ".env") });
 
-// Build MCP server
 const server = new McpServer(
   { name: "hello-mcp-node", version: "1.0.0" },
   { capabilities: { logging: {} } }
 );
 
-// Example tool
+const ensureEnv = (key: string) => {
+  const value = process.env[key];
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${key}`);
+  }
+  return value;
+};
+
+// Register a simple greeting tool that accepts an optional name
 server.registerTool(
   "greet",
   {
@@ -28,13 +39,85 @@ server.registerTool(
   })
 );
 
-// STATeless transport: no SSE or sessions needed
+const apiBase = ensureEnv("API_BASE");
+const apiCode = ensureEnv("API_CODE");
+
+// Tool to fetch fixture data from the external API defined in .env
+server.registerTool(
+  "fetch_external_data",
+  {
+    title: "Fetch External Data",
+    description: "Retrieve fixture data from the upstream API",
+    inputSchema: {},
+  },
+  async () => {
+    const url = new URL(apiBase);
+    url.searchParams.set("code", apiCode);
+
+    let response;
+    try {
+      response = await fetch(url.href);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Failed to reach external API: ${message}`,
+          },
+        ],
+        isError: true,
+      };
+    }
+
+    if (!response.ok) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: `External API returned ${response.status} ${response.statusText}`,
+          },
+        ],
+        isError: true,
+      };
+    }
+
+    const rawBody = await response.text();
+    try {
+      const payload = JSON.parse(rawBody);
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify(payload, null, 2),
+          },
+        ],
+      };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Failed to parse JSON response (${message}). Raw body: ${rawBody}`,
+          },
+        ],
+        isError: true,
+      };
+    }
+  }
+);
+
+const app = express();
+app.use(express.json());
+
+// Stateless transport: sessionIdGenerator stays undefined per SDK guidance
 const transport = new StreamableHTTPServerTransport({
   sessionIdGenerator: undefined,
   enableJsonResponse: true,
 });
 
-// Connect once before serving requests
+// Connect transport once at startup
 await server.connect(transport);
 
 // Only POST /mcp is meaningful in stateless mode
@@ -42,7 +125,7 @@ app.post("/mcp", async (req, res) => {
   await transport.handleRequest(req, res, req.body);
 });
 
-// Explicit 405s for GET/DELETE so it’s clear we’re stateless
+// In stateless mode, reject unsupported HTTP verbs with 405
 app.get("/mcp", (_req, res) =>
   res.status(405).json({
     jsonrpc: "2.0",
@@ -59,7 +142,6 @@ app.delete("/mcp", (_req, res) =>
 );
 
 const port = Number(process.env.PORT || 8000);
-app.set("trust proxy", 1);
-app.listen(port, () => {
-  console.log(`MCP server listening on http://localhost:${port}/mcp`);
-});
+app.listen(port, () =>
+  console.log(`MCP server on http://localhost:${port}/mcp`)
+);

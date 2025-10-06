@@ -1,7 +1,45 @@
-### Health
-GET http://localhost:8000/healthz
+
+
+### PRODUCTION ###
+GET https://mcp-hello-node.onrender.com/healthz
+
+
 
 ### Statless tool call (the only one you need)
+POST https://mcp-hello-node.onrender.com/mcp
+Content-Type: application/json
+Accept: application/json, text/event-stream
+
+{
+  "jsonrpc": "2.0",
+  "id": "1",
+  "method": "tools/call",
+  "params": {
+    "name": "greet",
+    "arguments": { "name": "Chris" }
+  }
+}
+
+
+
+### DEVELOPMENT ###
+
+### Call fetch_external_data via MCP (JSON-RPC)
+POST http://localhost:8000/mcp
+Content-Type: application/json
+Accept: application/json, text/event-stream
+
+{
+  "jsonrpc": "2.0",
+  "id": "1",
+  "method": "tools/call",
+  "params": {
+    "name": "fetch_external_data",
+    "arguments": {}
+  }
+}
+
+### Call greet (stateless)
 POST http://localhost:8000/mcp
 Content-Type: application/json
 Accept: application/json, text/event-stream
