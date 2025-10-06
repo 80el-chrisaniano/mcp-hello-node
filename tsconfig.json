@@ -1,11 +1,14 @@
 {
   "compilerOptions": {
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "module": "nodenext", 
+    "moduleResolution": "nodenext",
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "allowJs": false,
     "target": "ES2022",
     "outDir": "dist",
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true
-  }
+    "rootDir": "src",
+    // ... other settings
+  },
+  "include": ["src/**/*.ts"]
 }
